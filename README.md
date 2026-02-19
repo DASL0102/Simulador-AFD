@@ -29,7 +29,7 @@ proyecto/
 
 ---
 
-# ▶Cómo ejecutar el programa
+# Cómo ejecutar el programa
 
 Desde la carpeta del proyecto:
 
@@ -173,7 +173,7 @@ Prueba 2: ['0', '1'] → ❌ Inválida
 
 ---
 
-# 🚀 Crear un nuevo autómata
+# Crear un nuevo autómata
 
 1. Modifica `automata.json`
 2. Cambia estados, alfabeto y transiciones
