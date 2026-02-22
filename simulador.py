@@ -1,4 +1,4 @@
-import json
+
 class AFD:
     def __init__(self, estados, alfabeto, transiciones, estado_inicial, estados_finales):
         self.estados = estados
@@ -13,34 +13,58 @@ class AFD:
 
     def procesar_cadena(self, cadena):
         self.reiniciar()
+        recorrido = [self.estado_actual]  # Lista para guardar el recorrido
 
         for simbolo in cadena:
             if simbolo not in self.alfabeto:
-                return False
+                return False, recorrido
 
             clave = (self.estado_actual, simbolo)
 
             if clave not in self.transiciones:
-                return False
+                return False, recorrido
 
             self.estado_actual = self.transiciones[clave]
+            recorrido.append(self.estado_actual)  # Guardamos el nuevo estado
 
-        return self.estado_actual in self.estados_finales
+        return self.estado_actual in self.estados_finales, recorrido
 
 
 
-def cargar_desde_json(ruta):
-    with open(ruta, "r") as f:
-        data = json.load(f)
+def cargar_desde_txt(ruta):
+    with open(ruta, "r", encoding="utf-8") as f:
+        lineas = [linea.strip() for linea in f if linea.strip()]
 
-    estados = set(data["estados"])
-    alfabeto = set(data["alfabeto"])
-    estado_inicial = data["estado_inicial"]
-    estados_finales = set(data["estados_finales"])
-    
+    estados = set()
+    alfabeto = set()
+    estado_inicial = None
+    estados_finales = set()
     transiciones = {}
-    for origen, simbolo, destino in data["transiciones"]:
-        transiciones[(origen, simbolo)] = destino
+
+    seccion = None
+
+    for linea in lineas:
+        if linea.startswith("#"):
+            seccion = linea.lower()
+            continue
+
+        if seccion == "#estados":
+            estados = set(linea.split(","))
+
+        elif seccion == "#inicial":
+            estado_inicial = linea
+
+        elif seccion == "#terminales":
+            estados_finales = set(linea.split(","))
+
+        elif seccion == "#alfabeto":
+            alfabeto = set(linea.split(","))
+
+        elif seccion == "#transiciones":
+            partes = linea.split(",")
+            if len(partes) == 3:
+                origen, simbolo, destino = partes
+                transiciones[(origen, simbolo)] = destino
 
     afd = AFD(
         estados,
@@ -50,15 +74,28 @@ def cargar_desde_json(ruta):
         estados_finales
     )
 
-    return afd, data["cadenas_test"]
+    return afd
 
 if __name__ == '__main__':
 
-    afd, pruebas = cargar_desde_json("automata.json")
+    afd = cargar_desde_txt("automata.txt")
 
-    for i, cadena in enumerate(pruebas, 1):
-        resultado = afd.procesar_cadena(cadena)
-        estado = "Cadena Aceptada" if resultado else "Cadena Inválida"
-        print(f"Prueba {i}: {cadena} → {estado}")
+    print("Autómata cargado correctamente.")
+    print("Escribe una cadena para evaluar.")
+    print("Escribe 'salir' para terminar.\n")
 
-   
+    while True:
+        cadena = input("Ingrese cadena: ").strip()
+
+        if cadena.lower() == "salir":
+            print("Fin del programa.")
+            break
+
+        resultado, recorrido = afd.procesar_cadena(cadena)
+
+        print(f"→ Recorrido de estados: {recorrido}")
+
+        if resultado:
+            print("→ Cadena Aceptada\n")
+        else:
+            print("→ Cadena Inválida\n")
